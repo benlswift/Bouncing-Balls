@@ -1,17 +1,3 @@
-//#include "mainwindow.h"
-//#include <QApplication>
-
-//int main(int argc, char *argv[])
-//{
-//    QApplication a(argc, argv);
-//    MainWindow w;
-//    w.setTitle("Bouncing Balls");
-//    w.resize(640,480);
-//    w.show();
-
-//    return a.exec();
-//}
-
 /****************************************************************************
 **
 ** Copyright (C) 2016 The Qt Company Ltd.
@@ -62,59 +48,28 @@
 **
 ****************************************************************************/
 
-#include <QApplication>
-#include <QDesktopWidget>
-#include <QSurfaceFormat>
-#include <QCommandLineParser>
-#include <QCommandLineOption>
+#ifndef LOGO_H
+#define LOGO_H
 
-#include "glwidget.h"
-#include "mainwindow.h"
+#include <qopengl.h>
+#include <QVector>
+#include <QVector3D>
 
-int main(int argc, char *argv[])
+class Logo
 {
-    QApplication app(argc, argv);
+public:
+    Logo();
+    const GLfloat *constData() const { return m_data.constData(); }
+    int count() const { return m_count; }
+    int vertexCount() const { return m_count / 6; }
 
-    QCoreApplication::setApplicationName("Qt Hello GL 2 Example");
-    QCoreApplication::setOrganizationName("QtProject");
-    QCoreApplication::setApplicationVersion(QT_VERSION_STR);
-    QCommandLineParser parser;
-    parser.setApplicationDescription(QCoreApplication::applicationName());
-    parser.addHelpOption();
-    parser.addVersionOption();
-    QCommandLineOption multipleSampleOption("multisample", "Multisampling");
-    parser.addOption(multipleSampleOption);
-    QCommandLineOption coreProfileOption("coreprofile", "Use core profile");
-    parser.addOption(coreProfileOption);
-    QCommandLineOption transparentOption("transparent", "Transparent window");
-    parser.addOption(transparentOption);
+private:
+    void quad(GLfloat x1, GLfloat y1, GLfloat x2, GLfloat y2, GLfloat x3, GLfloat y3, GLfloat x4, GLfloat y4);
+    void extrude(GLfloat x1, GLfloat y1, GLfloat x2, GLfloat y2);
+    void add(const QVector3D &v, const QVector3D &n);
 
-    parser.process(app);
+    QVector<GLfloat> m_data;
+    int m_count;
+};
 
-    QSurfaceFormat fmt;
-    fmt.setDepthBufferSize(24);
-    if (parser.isSet(multipleSampleOption))
-        fmt.setSamples(4);
-    if (parser.isSet(coreProfileOption)) {
-        fmt.setVersion(3, 2);
-        fmt.setProfile(QSurfaceFormat::CoreProfile);
-    }
-    QSurfaceFormat::setDefaultFormat(fmt);
-
-    MainWindow mainWindow;
-
-    GLWidget::setTransparent(parser.isSet(transparentOption));
-    if (GLWidget::isTransparent()) {
-        mainWindow.setAttribute(Qt::WA_TranslucentBackground);
-        mainWindow.setAttribute(Qt::WA_NoSystemBackground, false);
-    }
-    mainWindow.resize(mainWindow.sizeHint());
-    int desktopArea = QApplication::desktop()->width() *
-                     QApplication::desktop()->height();
-    int widgetArea = mainWindow.width() * mainWindow.height();
-    if (((float)widgetArea / (float)desktopArea) < 0.75f)
-        mainWindow.show();
-    else
-        mainWindow.showMaximized();
-    return app.exec();
-}
+#endif // LOGO_H

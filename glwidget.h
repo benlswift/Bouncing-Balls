@@ -1,17 +1,3 @@
-//#include "mainwindow.h"
-//#include <QApplication>
-
-//int main(int argc, char *argv[])
-//{
-//    QApplication a(argc, argv);
-//    MainWindow w;
-//    w.setTitle("Bouncing Balls");
-//    w.resize(640,480);
-//    w.show();
-
-//    return a.exec();
-//}
-
 /****************************************************************************
 **
 ** Copyright (C) 2016 The Qt Company Ltd.
@@ -62,59 +48,70 @@
 **
 ****************************************************************************/
 
-#include <QApplication>
-#include <QDesktopWidget>
-#include <QSurfaceFormat>
-#include <QCommandLineParser>
-#include <QCommandLineOption>
+#ifndef GLWIDGET_H
+#define GLWIDGET_H
 
-#include "glwidget.h"
-#include "mainwindow.h"
+#include <QOpenGLWidget>
+#include <QOpenGLFunctions>
+#include <QOpenGLVertexArrayObject>
+#include <QOpenGLBuffer>
+#include <QMatrix4x4>
+#include "logo.h"
 
-int main(int argc, char *argv[])
+QT_FORWARD_DECLARE_CLASS(QOpenGLShaderProgram)
+
+class GLWidget : public QOpenGLWidget, protected QOpenGLFunctions
 {
-    QApplication app(argc, argv);
+    Q_OBJECT
 
-    QCoreApplication::setApplicationName("Qt Hello GL 2 Example");
-    QCoreApplication::setOrganizationName("QtProject");
-    QCoreApplication::setApplicationVersion(QT_VERSION_STR);
-    QCommandLineParser parser;
-    parser.setApplicationDescription(QCoreApplication::applicationName());
-    parser.addHelpOption();
-    parser.addVersionOption();
-    QCommandLineOption multipleSampleOption("multisample", "Multisampling");
-    parser.addOption(multipleSampleOption);
-    QCommandLineOption coreProfileOption("coreprofile", "Use core profile");
-    parser.addOption(coreProfileOption);
-    QCommandLineOption transparentOption("transparent", "Transparent window");
-    parser.addOption(transparentOption);
+public:
+    GLWidget(QWidget *parent = 0);
+    ~GLWidget();
 
-    parser.process(app);
+    static bool isTransparent() { return m_transparent; }
+    static void setTransparent(bool t) { m_transparent = t; }
 
-    QSurfaceFormat fmt;
-    fmt.setDepthBufferSize(24);
-    if (parser.isSet(multipleSampleOption))
-        fmt.setSamples(4);
-    if (parser.isSet(coreProfileOption)) {
-        fmt.setVersion(3, 2);
-        fmt.setProfile(QSurfaceFormat::CoreProfile);
-    }
-    QSurfaceFormat::setDefaultFormat(fmt);
+    QSize minimumSizeHint() const override;
+    QSize sizeHint() const override;
 
-    MainWindow mainWindow;
+public slots:
+    void setXRotation(int angle);
+    void setYRotation(int angle);
+    void setZRotation(int angle);
+    void cleanup();
 
-    GLWidget::setTransparent(parser.isSet(transparentOption));
-    if (GLWidget::isTransparent()) {
-        mainWindow.setAttribute(Qt::WA_TranslucentBackground);
-        mainWindow.setAttribute(Qt::WA_NoSystemBackground, false);
-    }
-    mainWindow.resize(mainWindow.sizeHint());
-    int desktopArea = QApplication::desktop()->width() *
-                     QApplication::desktop()->height();
-    int widgetArea = mainWindow.width() * mainWindow.height();
-    if (((float)widgetArea / (float)desktopArea) < 0.75f)
-        mainWindow.show();
-    else
-        mainWindow.showMaximized();
-    return app.exec();
-}
+signals:
+    void xRotationChanged(int angle);
+    void yRotationChanged(int angle);
+    void zRotationChanged(int angle);
+
+protected:
+    void initializeGL() override;
+    void paintGL() override;
+    void resizeGL(int width, int height) override;
+    void mousePressEvent(QMouseEvent *event) override;
+    void mouseMoveEvent(QMouseEvent *event) override;
+
+private:
+    void setupVertexAttribs();
+
+    bool m_core;
+    int m_xRot;
+    int m_yRot;
+    int m_zRot;
+    QPoint m_lastPos;
+    Logo m_logo;
+    QOpenGLVertexArrayObject m_vao;
+    QOpenGLBuffer m_logoVbo;
+    QOpenGLShaderProgram *m_program;
+    int m_projMatrixLoc;
+    int m_mvMatrixLoc;
+    int m_normalMatrixLoc;
+    int m_lightPosLoc;
+    QMatrix4x4 m_proj;
+    QMatrix4x4 m_camera;
+    QMatrix4x4 m_world;
+    static bool m_transparent;
+};
+
+#endif

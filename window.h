@@ -1,17 +1,3 @@
-//#include "mainwindow.h"
-//#include <QApplication>
-
-//int main(int argc, char *argv[])
-//{
-//    QApplication a(argc, argv);
-//    MainWindow w;
-//    w.setTitle("Bouncing Balls");
-//    w.resize(640,480);
-//    w.show();
-
-//    return a.exec();
-//}
-
 /****************************************************************************
 **
 ** Copyright (C) 2016 The Qt Company Ltd.
@@ -62,59 +48,41 @@
 **
 ****************************************************************************/
 
-#include <QApplication>
-#include <QDesktopWidget>
-#include <QSurfaceFormat>
-#include <QCommandLineParser>
-#include <QCommandLineOption>
+#ifndef WINDOW_H
+#define WINDOW_H
 
-#include "glwidget.h"
-#include "mainwindow.h"
+#include <QWidget>
 
-int main(int argc, char *argv[])
+QT_BEGIN_NAMESPACE
+class QSlider;
+class QPushButton;
+QT_END_NAMESPACE
+
+class GLWidget;
+class MainWindow;
+
+class Window : public QWidget
 {
-    QApplication app(argc, argv);
+    Q_OBJECT
 
-    QCoreApplication::setApplicationName("Qt Hello GL 2 Example");
-    QCoreApplication::setOrganizationName("QtProject");
-    QCoreApplication::setApplicationVersion(QT_VERSION_STR);
-    QCommandLineParser parser;
-    parser.setApplicationDescription(QCoreApplication::applicationName());
-    parser.addHelpOption();
-    parser.addVersionOption();
-    QCommandLineOption multipleSampleOption("multisample", "Multisampling");
-    parser.addOption(multipleSampleOption);
-    QCommandLineOption coreProfileOption("coreprofile", "Use core profile");
-    parser.addOption(coreProfileOption);
-    QCommandLineOption transparentOption("transparent", "Transparent window");
-    parser.addOption(transparentOption);
+public:
+    Window(MainWindow *mw);
 
-    parser.process(app);
+protected:
+    void keyPressEvent(QKeyEvent *event) override;
 
-    QSurfaceFormat fmt;
-    fmt.setDepthBufferSize(24);
-    if (parser.isSet(multipleSampleOption))
-        fmt.setSamples(4);
-    if (parser.isSet(coreProfileOption)) {
-        fmt.setVersion(3, 2);
-        fmt.setProfile(QSurfaceFormat::CoreProfile);
-    }
-    QSurfaceFormat::setDefaultFormat(fmt);
+private slots:
+    void dockUndock();
 
-    MainWindow mainWindow;
+private:
+    QSlider *createSlider();
 
-    GLWidget::setTransparent(parser.isSet(transparentOption));
-    if (GLWidget::isTransparent()) {
-        mainWindow.setAttribute(Qt::WA_TranslucentBackground);
-        mainWindow.setAttribute(Qt::WA_NoSystemBackground, false);
-    }
-    mainWindow.resize(mainWindow.sizeHint());
-    int desktopArea = QApplication::desktop()->width() *
-                     QApplication::desktop()->height();
-    int widgetArea = mainWindow.width() * mainWindow.height();
-    if (((float)widgetArea / (float)desktopArea) < 0.75f)
-        mainWindow.show();
-    else
-        mainWindow.showMaximized();
-    return app.exec();
-}
+    GLWidget *glWidget;
+    QSlider *xSlider;
+    QSlider *ySlider;
+    QSlider *zSlider;
+    QPushButton *dockBtn;
+    MainWindow *mainWindow;
+};
+
+#endif
