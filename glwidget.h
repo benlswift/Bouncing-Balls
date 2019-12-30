@@ -1,117 +1,89 @@
-/****************************************************************************
-**
-** Copyright (C) 2016 The Qt Company Ltd.
-** Contact: https://www.qt.io/licensing/
-**
-** This file is part of the examples of the Qt Toolkit.
-**
-** $QT_BEGIN_LICENSE:BSD$
-** Commercial License Usage
-** Licensees holding valid commercial Qt licenses may use this file in
-** accordance with the commercial license agreement provided with the
-** Software or, alternatively, in accordance with the terms contained in
-** a written agreement between you and The Qt Company. For licensing terms
-** and conditions see https://www.qt.io/terms-conditions. For further
-** information use the contact form at https://www.qt.io/contact-us.
-**
-** BSD License Usage
-** Alternatively, you may use this file under the terms of the BSD license
-** as follows:
-**
-** "Redistribution and use in source and binary forms, with or without
-** modification, are permitted provided that the following conditions are
-** met:
-**   * Redistributions of source code must retain the above copyright
-**     notice, this list of conditions and the following disclaimer.
-**   * Redistributions in binary form must reproduce the above copyright
-**     notice, this list of conditions and the following disclaimer in
-**     the documentation and/or other materials provided with the
-**     distribution.
-**   * Neither the name of The Qt Company Ltd nor the names of its
-**     contributors may be used to endorse or promote products derived
-**     from this software without specific prior written permission.
-**
-**
-** THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS
-** "AS IS" AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT
-** LIMITED TO, THE IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR
-** A PARTICULAR PURPOSE ARE DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT
-** OWNER OR CONTRIBUTORS BE LIABLE FOR ANY DIRECT, INDIRECT, INCIDENTAL,
-** SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT
-** LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES; LOSS OF USE,
-** DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND ON ANY
-** THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT
-** (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
-** OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE."
-**
-** $QT_END_LICENSE$
-**
-****************************************************************************/
 
-#ifndef GLWIDGET_H
-#define GLWIDGET_H
-
+#include <QGLWidget>
+#include <QKeyEvent>
+#include <QMouseEvent>
 #include <QOpenGLWidget>
-#include <QOpenGLFunctions>
-#include <QOpenGLVertexArrayObject>
-#include <QOpenGLBuffer>
-#include <QMatrix4x4>
-#include "logo.h"
+#include <math.h>
+#include <time.h>
+#include <stdio.h>
+#include <stdlib.h>
+#include <iostream>
+#include <QTimer>
+#include "mainwindow.h"
+#include <QApplication>
+#include <QtOpenGL>
+#include <GL/glu.h>
 
-QT_FORWARD_DECLARE_CLASS(QOpenGLShaderProgram)
-
-class GLWidget : public QOpenGLWidget, protected QOpenGLFunctions
+class glWidget : public QOpenGLWidget
 {
     Q_OBJECT
 
 public:
-    GLWidget(QWidget *parent = 0);
-    ~GLWidget();
+    explicit glWidget(QWidget *parent = 0);
 
-    static bool isTransparent() { return m_transparent; }
-    static void setTransparent(bool t) { m_transparent = t; }
+    ~glWidget();
+    float ang,x,y;
+    float ty=-0.8,sx=0.1,sy=0.1;
+    int flag=0,cnt=0;
+    const double PI = 3.1415926535897932384626433832795;
+    //Camera variables
+    GLdouble fov = 40.0, nearZ = 1, farZ = 20, theta = 0, phi = 135;
+    GLdouble eyePos[3] = { radius*cosf(phi*PI / 180.0f)*sinf(theta*PI / 180.0f) ,radius*sinf(phi*PI / 180.0f) ,radius*cosf(phi*PI / 180.0f)*cosf(theta*PI / 180.0f) };	//Using spherical coords
+    GLdouble targetPos[3] = { 0, 0, 2 };
+    GLdouble up[3] = { 0,1,0 };
+    int frame = 0;
+    float wind;
+    float mass;
+    float radius;
+    float restitution;
 
-    QSize minimumSizeHint() const override;
-    QSize sizeHint() const override;
+    //Last point of mouse click used in camera
+    QPoint lastPos;
+    GLfloat rotationX;
+    GLfloat rotationY;
+    GLfloat rotationZ;
+    GLfloat xPos;
+    GLfloat yPos;
+    GLfloat zoom;
+    float posx;
+    float posy;
+    float ySpeed;
+    bool pause;
+    float FPS = 60.0f;
 
-public slots:
-    void setXRotation(int angle);
-    void setYRotation(int angle);
-    void setZRotation(int angle);
-    void cleanup();
-
-signals:
-    void xRotationChanged(int angle);
-    void yRotationChanged(int angle);
-    void zRotationChanged(int angle);
-
+    void perspectiveGL(GLdouble fovY, GLdouble aspect, GLdouble zNear, GLdouble zFar);
+    void CreateSphere(double R);
+    void recalculateEyePos();
+    void mouseMoveEvent(QMouseEvent *event);
+    void mousePressEvent(QMouseEvent *event);
+    void glLookAt(GLfloat x, GLfloat y, GLfloat z, GLfloat rx, GLfloat ry, GLfloat rz);
+    void mouseDoubleClickEvent(QMouseEvent *event);
+    void pauseAnimation();
+    void setWind(float w);
+    void setSpeed(float v);
+    void reset();
+    void setX();
+    void setStartPos(float, float);
+    void setRadius(float );
+    void timer(float);
+    void setFPS(float);
+    void setResitution(float colResistution);
+    void wheelEvent(QWheelEvent *event);
 protected:
-    void initializeGL() override;
-    void paintGL() override;
-    void resizeGL(int width, int height) override;
-    void mousePressEvent(QMouseEvent *event) override;
-    void mouseMoveEvent(QMouseEvent *event) override;
+
+    virtual void paintGL();
+    virtual void initializeGL();
+    virtual void resizeGL(int width, int height);
+    virtual void timerEvent(QTimerEvent *event);
+    virtual void keyPressEvent(QKeyEvent *event);
 
 private:
-    void setupVertexAttribs();
 
-    bool m_core;
-    int m_xRot;
-    int m_yRot;
-    int m_zRot;
-    QPoint m_lastPos;
-    Logo m_logo;
-    QOpenGLVertexArrayObject m_vao;
-    QOpenGLBuffer m_logoVbo;
-    QOpenGLShaderProgram *m_program;
-    int m_projMatrixLoc;
-    int m_mvMatrixLoc;
-    int m_normalMatrixLoc;
-    int m_lightPosLoc;
-    QMatrix4x4 m_proj;
-    QMatrix4x4 m_camera;
-    QMatrix4x4 m_world;
-    static bool m_transparent;
+    bool mFullScreen;
+    QBasicTimer time;
+    GLfloat mRotateTriangle;
+    GLfloat mRotateQuad;
+
+private slots:
+     //void animate();
 };
-
-#endif
