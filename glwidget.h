@@ -22,20 +22,15 @@ public:
     explicit glWidget(QWidget *parent = 0);
 
     ~glWidget();
-    float ang,x,y;
-    float ty=-0.8,sx=0.1,sy=0.1;
-    int flag=0,cnt=0;
     const double PI = 3.1415926535897932384626433832795;
-    //Camera variables
-    GLdouble fov = 40.0, nearZ = 1, farZ = 20, theta = 0, phi = 135;
-    GLdouble eyePos[3] = { radius*cosf(phi*PI / 180.0f)*sinf(theta*PI / 180.0f) ,radius*sinf(phi*PI / 180.0f) ,radius*cosf(phi*PI / 180.0f)*cosf(theta*PI / 180.0f) };	//Using spherical coords
-    GLdouble targetPos[3] = { 0, 0, 2 };
-    GLdouble up[3] = { 0,1,0 };
     int frame = 0;
     float wind;
     float mass;
     float radius;
     float restitution;
+    float red;
+    float blue;
+    float green;
 
     //Last point of mouse click used in camera
     QPoint lastPos;
@@ -50,6 +45,16 @@ public:
     float ySpeed;
     bool pause;
     float FPS = 60.0f;
+    int startTime = GetTickCount();
+    float xcoord;
+    float ycoord;
+    float xSpeed;
+    float friction;
+    float newTime;
+    float oldTime = GetTickCount();
+    float drag;
+    float top;
+    float v;
 
     void perspectiveGL(GLdouble fovY, GLdouble aspect, GLdouble zNear, GLdouble zFar);
     void CreateSphere(double R);
@@ -69,6 +74,10 @@ public:
     void setFPS(float);
     void setResitution(float colResistution);
     void wheelEvent(QWheelEvent *event);
+    void setColour(float r, float g, float b);
+    void setFriction(float f);
+    void simulatePhysics();
+    void setDrag(float airRes);
 protected:
 
     virtual void paintGL();
@@ -85,5 +94,5 @@ private:
     GLfloat mRotateQuad;
 
 private slots:
-     //void animate();
+     void gameLoop();
 };

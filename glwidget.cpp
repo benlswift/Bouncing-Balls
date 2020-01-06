@@ -2,7 +2,6 @@
 
 const double PI = 3.1415926535897932384626433832795;
 double SKIP_TICKS;
-int startTime;
 
 int g_current_frame_number;
 
@@ -14,13 +13,13 @@ glWidget::glWidget(QWidget * parent) : QOpenGLWidget(parent)
     rotationX = 0.0f;//set initial values
     rotationY = 0.0f;
     rotationZ = 0.0f;
-    zoom = 1.0f;
+    zoom = 1.2f;
     xPos = 0.0f;
-    yPos = -0.5f;
+    yPos = 0.2f;
     pause = false;
 }
 
-//void glWidget::animate(){//not working -> may have to revert to original timer() method
+void glWidget::gameLoop(){
 //    update();
 //    SKIP_TICKS = 1000.0f / FPS;
 //    int nextGameTick = GetTickCount();
@@ -33,10 +32,10 @@ glWidget::glWidget(QWidget * parent) : QOpenGLWidget(parent)
 
 //    if (sleepTime > 0)
 //    {
-//        QThread::msleep(sleepTime);
+//        QThread::msleep(SKIP_TICKS);
 //    }
 
-//}
+}
 
 glWidget::~glWidget()
 {
@@ -64,82 +63,95 @@ void glWidget::resizeGL(int width, int height)
 
 void glWidget::initializeGL()
 {
-    //startTime = GetTickCount();
-    //QTimer *aTimer = new QTimer;
-    //connect(aTimer,SIGNAL(timeout()),this,SLOT(animate()));
-    //aTimer->start(0);
+    QTimer *timer = new QTimer;
+    connect(timer,SIGNAL(timeout()),this,SLOT(gameLoop()));
+    timer->start(0);
+
     glClearColor(0.0, 0.0, 0.0, 0.0);
     glMatrixMode(GL_PROJECTION);
     glLoadIdentity();
-    glOrtho(0.0, 1.0, 0.0, 1.0, -1.0, 1.0);
+    glOrtho(0.0, 10.0, 0.0, 10.0, -1.0, 1.0);
 
 }
 
-float xSpeed=0.01f;
-float minus = 0.0;
-float vel = 0.0;
-float frameAcc = 0.001;
-float xc;
-float yc;
-float oldyc;
+void glWidget::simulatePhysics(){
+    //newTime = GetTickCount();
+    float changeTime = 0.01;//timestep for calculating new position
+
+    if (posy-radius<=-1.0f)//when at top or bottom of screen reverse bounce
+    {
+        if (posx+radius>1.5f || posx-radius<=-1.5f)//falls off table
+        {
+        }
+        else{
+        ySpeed*=-1;
+        if (posy-radius <=1.0f){
+            ySpeed *= restitution;
+            ySpeed *= friction;//reduce speed due to friction of table/floor
+            posy = -1.0 + radius;//reposition ball -- so doesn't fall through floor
+        }
+        }
+    }
+    ySpeed -= 9.81f * changeTime;
+    ySpeed *= drag;//reduce speed due to air resistance/drag
+    posy += (ySpeed * changeTime);
+    std::cout << "Time change: " << changeTime << " newTime: " << newTime << " oldTime: " << oldTime <<std::endl;
+    //posy = posy + ySpeed * changeTime + (0.5 * -0.0981 * pow(changeTime,2));
+    wind *=drag;
+    posx+=wind;//add wind speed to position on x axis
+    //oldTime = GetTickCount();
+
+    }
 void glWidget::paintGL()
 {
-
     glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT); // Clear The Screen And The Depth Buffer
     glLoadIdentity();                   // Reset The View
     glTranslatef(xPos,yPos,-1.0f);             // Move Left And Into The Screen
     glScalef(zoom,zoom,1.0f);
     glClear(GL_COLOR_BUFFER_BIT);
-    double PI=3.14159265;
-    float top = posy+0.1f;
-    float pos1 = posy;
-    float pos2;
-    float mass;
 
 
     if (pause == false){//when paused position doesn't change
-
-    if (posx+radius>1.0f || posx-radius<=-1.0f)
-    {
-        xSpeed*=-1;
+    simulatePhysics();//do physics sim
     }
-    if (posy+radius>top || posy-radius<=-1.0f)//when at top or bottom of screen reverse bounce
-    {
-        ySpeed*=-1;
-        if (posy-radius <=1.0f){
-            ySpeed *= restitution;
-            top -= 0.001;
-        }
-    }
-    float v = sqrt(2 * 9.81f * posy)/100;
-    //ySpeed = v * restitution;
-    ySpeed -= 0.001f;
-
-    posx+=wind;//add wind speed to position on x axis
-    posy+=ySpeed;// add gravity to y position
-    top -= 0.001f;// bring top value down to make ball bounce
-
-    }
-
     glBegin(GL_POLYGON);
     for (float angle = 0;angle<360;angle++)//draw ball
     {
         //work out x and y coords at each point using pi and radius
-        xc=sin(angle*PI/180) * radius;
-        yc=cos(angle*PI/180) * radius;
-        glColor3f(1.0f,0.0f,0.0f);          // red
-        glVertex3f( xc+posx, yc+posy ,0.0f);// draw each points, using x,y coords and forces acting on the ball
+        xcoord=sin(angle*PI/180) * radius;
+        ycoord=cos(angle*PI/180) * radius;
+        glColor3f(red,green,blue);
+        glVertex3f( xcoord+posx, ycoord+posy ,0.0f);// draw each points, using x,y coords and forces acting on the ball
     }
+    glEnd();
+
+    glBegin(GL_POLYGON);//draw the table
+    glColor3f(0.5f,0.2f,0.2f);
+    glVertex3f( -1.4f, -1.20f, 0.0f);
+    glVertex3f( -1.4f,  -1.0f, 0.0f);
+    glVertex3f(  1.4f,  -1.0f, 0.0f);
+    glVertex3f(  1.4f, -1.20f, 0.0f);
+    glEnd();
+
+
+    glBegin(GL_POLYGON);
+    glColor3f(0.5f,0.2f,0.2f);
+    glVertex3f( -1.4f, -1.20f, 0.0f);//left leg
+    glVertex3f(  -1.4f,  -2.0f, 0.0f);// leg
+    glVertex3f(  -1.2f, -2.0f, 0.0f);// leg
+    glVertex3f( -1.2f,  -1.20f, 0.0f);//left leg
 
     glEnd();
 
-    glBegin(GL_POLYGON);//draw the floor
-    glColor3f(0.0f,0.0f,1.0f);
-    glVertex3f( -10.0f, -5.0f, 0.0f);
-    glVertex3f( -10.0f,  -1.0f, 0.0f);
-    glVertex3f(  10.0f,  -1.0f, 0.0f);
-    glVertex3f(  10.0f, -5.0f, 0.0f);
+    glBegin(GL_POLYGON);
+    glColor3f(0.5f,0.2f,0.2f);
+    glVertex3f( 1.4f, -1.20f, 0.0f);//right leg
+    glVertex3f(  1.4f,  -2.0f, 0.0f);//right leg
+    glVertex3f(  1.2f, -2.0f, 0.0f);//right leg
+    glVertex3f( 1.2f,  -1.20f, 0.0f);//right leg
+
     glEnd();
+
     glFlush();
     timer(FPS);
     frame++;
@@ -278,8 +290,7 @@ void glWidget::setWind(float w){
 }
 
 void glWidget::setSpeed(float v){
-    ySpeed = (v*9.81f)/1000;
-
+    ySpeed = (v*9.81f)/1000;//initial speed = mass * gravity
 }
 void glWidget::setFPS(float framesSecond){
     FPS = framesSecond;
@@ -302,5 +313,20 @@ void glWidget::setRadius(float rad){
 }
 
 void glWidget::setResitution(float colResistution){
-    restitution = colResistution/10;
+    restitution = colResistution;
+}
+
+void glWidget::setColour(float r, float g, float b){
+    red = r/10;
+    blue = b/10;
+    green = g/10;
+}
+
+void glWidget::setFriction(float f){
+    friction = 1-f/10;
+}
+
+void glWidget::setDrag(float airRes){
+    airRes = airRes/100;
+    drag = 1-airRes;
 }

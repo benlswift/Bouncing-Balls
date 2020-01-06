@@ -17,6 +17,9 @@ float radius;
 float fps;
 bool reopen;
 float restitution;
+float r, g,b;
+float friction;
+float drag;
 
 void MainWindow::on_startButton_clicked()
 {
@@ -27,19 +30,48 @@ void MainWindow::on_startButton_clicked()
     radius = ui.radiusBox->value();
     fps = ui.fpsBox->value();
     restitution = ui.colRestBox->value();
+    yStart = ui.yPosBox->value();
+    r = ui.redBox->value();
+    b = ui.blueBox->value();
+    g = ui.greenBox->value();
+    friction = ui.frictionBox->value();
+    drag = ui.dragBox->value();
     if (ui.ballBox->currentText() == "Football"){
-        restitution = 8;
-        ui.colRestBox->setValue(8);
+        restitution = 0.8;
+        ui.colRestBox->setValue(0.8);
         radius = 8;
         ui.radiusBox->setValue(8);
         mass = 5;
         ui.speedBox->setValue(5);
     }
+    else if (ui.ballBox->currentText() == "Golf Ball"){
+        restitution = 0.4;
+        ui.colRestBox->setValue(0.4);
+        radius = 2;
+        ui.radiusBox->setValue(2);
+        mass = 2;
+        ui.speedBox->setValue(2);
+        r = 10, g= 10, b =10;
+        ui.redBox->setValue(10), ui.greenBox->setValue(10), ui.blueBox->setValue(10);
+    }
+    else if (ui.ballBox->currentText() == "Tennis Ball"){
+        restitution = 0.7;
+        ui.colRestBox->setValue(0.7);
+        radius = 4;
+        ui.radiusBox->setValue(4);
+        mass = 4;
+        ui.speedBox->setValue(4);
+        r = 0, g= 10, b =0;
+        ui.redBox->setValue(0), ui.greenBox->setValue(10), ui.blueBox->setValue(0);
+    }
+    bouncingBalls->setDrag(drag);
+    bouncingBalls->setFriction(friction);
+    bouncingBalls->setColour(r,g,b);
     bouncingBalls->setResitution(restitution);
     bouncingBalls->setFPS(fps);
     bouncingBalls->setWind(wind/1000);
     bouncingBalls->setSpeed(mass/10);
-    bouncingBalls->setStartPos(xStart/10,0.8f);
+    bouncingBalls->setStartPos(xStart/10,yStart/10);
     bouncingBalls->setRadius(radius/100);
     bouncingBalls->setWindowTitle("Bouncing Balls");
     bouncingBalls->makeCurrent();
