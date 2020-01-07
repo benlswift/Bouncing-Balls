@@ -45,8 +45,8 @@ void MainWindow::on_startButton_clicked()
         ui.speedBox->setValue(5);
     }
     else if (ui.ballBox->currentText() == "Golf Ball"){
-        restitution = 0.4;
-        ui.colRestBox->setValue(0.4);
+        restitution = 0.5;
+        ui.colRestBox->setValue(0.5);
         radius = 2;
         ui.radiusBox->setValue(2);
         mass = 2;

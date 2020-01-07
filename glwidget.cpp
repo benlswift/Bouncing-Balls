@@ -3,10 +3,6 @@
 const double PI = 3.1415926535897932384626433832795;
 double SKIP_TICKS;
 
-int g_current_frame_number;
-
-float nextGameTick;
-
 glWidget::glWidget(QWidget * parent) : QOpenGLWidget(parent)
 {
 
@@ -41,7 +37,7 @@ glWidget::~glWidget()
 {
 }
 
-void glWidget::timer(float frames){//v v simple timer using Sleep
+void glWidget::timer(float frames){//v simple timer using Sleep
     float sleepTime;
     sleepTime = 1000 / frames;
     Sleep(sleepTime);
@@ -125,6 +121,17 @@ void glWidget::paintGL()
     }
     glEnd();
 
+    paintTable();
+    glFlush();
+
+    timer(FPS);
+    frame++;
+    update();
+    //}
+
+}
+
+void glWidget::paintTable(){
     glBegin(GL_POLYGON);//draw the table
     glColor3f(0.5f,0.2f,0.2f);
     glVertex3f( -1.4f, -1.20f, 0.0f);
@@ -151,13 +158,7 @@ void glWidget::paintGL()
     glVertex3f( 1.2f,  -1.20f, 0.0f);//right leg
 
     glEnd();
-
     glFlush();
-    timer(FPS);
-    frame++;
-    update();
-    //}
-
 }
 
 void glWidget::pauseAnimation(){

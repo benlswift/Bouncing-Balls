@@ -44,7 +44,7 @@ public:
     float posy;
     float ySpeed;
     bool pause;
-    float FPS = 60.0f;
+    float FPS;
     int startTime = GetTickCount();
     float xcoord;
     float ycoord;
@@ -78,6 +78,7 @@ public:
     void setFriction(float f);
     void simulatePhysics();
     void setDrag(float airRes);
+    void paintTable();
 protected:
 
     virtual void paintGL();
